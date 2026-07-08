@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checador Digital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.7/signature_pad.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: #ff6b6b;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #ee5a5a;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .login-screen {
+            max-width: 450px;
+            margin: 80px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-screen h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #40c057;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ee5a5a;
+        }
+
+        .btn-warning {
+            background: #ffa94d;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #ff922b;
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .employee-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .employee-item {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .employee-item:hover {
+            background: #f5f9ff;
+        }
+
+        .employee-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .type-btn:hover {
+            border-color: #667eea;
+        }
+
+        .type-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .shift-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .shift-btn {
+            padding: 15px 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .shift-btn:hover {
+            border-color: #667eea;
+        }
+
+        .shift-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .signature-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            background: white;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+            background: white;
+            width: 100%;
+            height: 300px;
+        }
+
+        .signature-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+        }
+
+        .signature-buttons .btn {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f5f5f5;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-buttons .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .time-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .observations-area {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            min-height: 100px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .observations-area:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .time-display {
+                font-size: 28px;
+            }
+
+            .type-selector {
+                flex-direction: column;
+            }
+
+            .type-btn {
+                padding: 12px;
+            }
+
+            .shift-btn {
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cámara oculta para captura silenciosa al registrar checada.
+         Está fuera de pantalla (no display:none) para que el navegador
+         no pause el stream, y nunca se muestra al empleado. -->
+    <video id="hiddenCamera" autoplay playsinline muted
+        style="position:absolute; top:-9999px; left:-9999px; width:320px; height:240px; opacity:0; pointer-events:none;"></video>
+
+    <div class="container">
+        <!-- PANTALLA LOGIN -->
+        <div id="loginScreen">
+            <div class="login-screen">
+                <h2>🕐 Checador Digital</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Selecciona tu Rol</label>
+                        <select id="roleSelect" required onchange="updateLoginFields()">
+                            <option value="">-- Selecciona --</option>
+                            <option value="empleado">👷 Empleado (Checador)</option>
+                            <option value="supervisor">👁️ Supervisor</option>
+                            <option value="admin">⚙️ Administrador</option>
+                            <option value="rh">👥 Recursos Humanos</option>
+                        </select>
+                    </div>
+
+                    <div id="credentialsFields" class="hidden">
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="username" placeholder="usuario">
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" id="password" placeholder="contraseña">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Ingresar</button>
+                </form>
+                <div id="loginError" class="error-msg"></div>
+            </div>
+        </div>
+
+        <!-- ÁREA PRINCIPAL -->
+        <div id="mainArea" class="hidden">
+            <div class="header">
+                <h1 id="headerTitle">Checador Digital</h1>
+                <div class="header-right">
+                    <div class="user-badge" id="userBadge">Rol</div>
+                    <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- ===== EMPLEADO ===== -->
+                <div id="empleadoView" class="hidden">
+                    <div class="time-display" id="timeDisplay">00:00:00</div>
+
+                    <div class="card">
+                        <h3>1. Busca y Selecciona tu Nombre</h3>
+                        <input type="text" class="search-input" id="employeeSearch" placeholder="Escribe tu nombre...">
+                        <div class="employee-list" id="employeeList"></div>
+                        <div id="selectedEmpInfo" style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 6px; display: none;">
+                            <strong>Empleado seleccionado:</strong> <span id="selectedEmpName"></span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>2. Selecciona tu Turno</h3>
+                        <div class="shift-selector">
+                            <button class="shift-btn selected" data-shift="matutino" onclick="selectShift('matutino')">🌅 Matutino</button>
+                            <button class="shift-btn" data-shift="vespertino" onclick="selectShift('vespertino')">🌇 Vespertino</button>
+                            <button class="shift-btn" data-shift="mixto" onclick="selectShift('mixto')">🌗 Mixto</button>
+                            <button class="shift-btn" data-shift="nocturno" onclick="selectShift('nocturno')">🌙 Nocturno</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. Tipo de Checada</h3>
+                        <div class="type-selector">
+                            <button class="type-btn selected" data-type="entrada" onclick="selectType('entrada')">✓ ENTRADA</button>
+                            <button class="type-btn" data-type="salida" onclick="selectType('salida')">✗ SALIDA</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. Captura tu Firma</h3>
+                        <div class="signature-container">
+                            <canvas id="signatureCanvas"></canvas>
+                        </div>
+                        <div class="signature-buttons">
+                            <button class="btn btn-warning" onclick="clearSignature()" style="flex: 1;">🗑️ Limpiar Firma</button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success" onclick="registerChecada()" style="width: 100%; padding: 18px; font-size: 18px; font-weight: bold;">✓ REGISTRAR CHECADA</button>
+                </div>
+
+                <!-- ===== SUPERVISOR ===== -->
+                <div id="supervisorView" class="hidden">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('sup-observaciones')">📝 Agregar Observaciones</button>
+                        <button class="tab" onclick="switchTab('sup-reportes')">📊 Reportes Hoy</button>
+                    </div>
+
+                    <div id="sup-observaciones">
+                        <div class="card">
+                            <h3>Buscar Empleado</h3>
+                            <input type="text" class="search-input" id="supEmployeeSearch" placeholder="Escribe nombre del empleado...">
+                            <div class="employee-list" id="supEmployeeList"></div>
+                        </div>
+
+                        <div id="supObservationForm" class="card hidden">
+                            <h3>Agregar Observación a <span id="supEmpName"></span></h3>
+                            <textarea class="observations-area" id="supObservation" placeholder="Ej: Llegó tarde, permiso médico, comisión..."></textarea>
+                            <button class="btn btn-success" onclick="saveObservation()" style="width: 100%; margin-top: 15px; padding: 12px;">Guardar Observación</button>
+                        </div>
+
+                        <div id="supStatusForm" class="card hidden">
+                            <h3>📋 Información Adicional del Día — <span id="supStatusEmpName"></span></h3>
+                            <p style="color:#999; font-size:13px; margin-bottom:15px;">Marca si el colaborador está en descanso, falta, incapacidad o permiso en una fecha específica. Esto aparecerá en los reportes.</p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="font-size: 13px; color: #666;">Fecha</label>
+                                    <input type="date" id="supStatusDate" class="search-input" style="margin-top: 5px;" onchange="loadDayStatusForm()">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="font-size: 13px; color: #666;">Estado</label>
+                                    <select id="supStatusType" class="search-input" style="margin-top: 5px;">
+                                        <option value="">— Ninguno (día normal) —</option>
+                                        <option value="descanso">🛌 Descanso</option>
+                                        <option value="falta">❌ Falta</option>
+                                        <option value="incapacidad">🏥 Incapacidad</option>
+                                        <option value="permiso">📄 Permiso</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <textarea class="observations-area" id="supStatusNote" placeholder="Nota opcional (ej. motivo del permiso, folio de incapacidad...)" style="min-height: 70px;"></textarea>
+                            <button class="btn btn-success" onclick="saveDayStatus()" style="width: 100%; margin-top: 15px; padding: 12px;">Guardar Estado</button>
+
+                            <h4 style="margin-top: 25px; margin-bottom: 10px; color: #333;">Historial reciente</h4>
+                            <div id="supStatusHistory"></div>
+                        </div>
+                    </div>
+
+                    <div id="sup-reportes" class="hidden">
+                        <div class="card">
+                            <h3>Checadas del Día de Hoy</h3>
+                            <div class="table-container" id="supReportContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== ADMINISTRADOR ===== -->
+                <div id="adminView" class="hidden">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <div class="tabs" style="flex: 1; margin-bottom: 0;">
+                            <button class="tab active" onclick="switchTab('admin-empleados')">👥 Empleados</button>
+                            <button class="tab" onclick="switchTab('admin-reportes')">📊 Reportes</button>
+                        </div>
+                        <button class="btn btn-warning" onclick="openSettingsModal()" style="align-self: flex-start;">⚙️ Ajustes</button>
+                    </div>
+
+                    <div id="admin-empleados">
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="openAddEmployeeModal()">➕ Agregar Empleado</button>
+                            <button class="btn btn-primary" onclick="importCleaningStaffBatch()">🧹 Alta Personal de Limpieza (76)</button>
+                            <button class="btn btn-primary" onclick="exportBackup()">⬇️ Exportar Respaldo</button>
+                            <button class="btn btn-warning" onclick="document.getElementById('importBackupInput').click()">⬆️ Importar Respaldo</button>
+                            <input type="file" id="importBackupInput" accept=".json" style="display:none" onchange="importBackup(event)">
+                        </div>
+                        <p style="color:#999; font-size:13px; margin-bottom:15px;">💡 Para que otro dispositivo tenga la misma lista de empleados y checadas, exporta el respaldo aquí y luego impórtalo en el otro dispositivo (no es necesario reenviar el HTML).</p>
+                        <div class="table-container" id="adminEmployeeTable"></div>
+                    </div>
+
+                    <div id="admin-reportes" class="hidden">
+                        <div class="card">
+                            <h3>Selecciona el Tipo de Reporte</h3>
+                            <div style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="generateAdminReport('daily')" style="flex: 1; min-width: 150px;">📅 Diario</button>
+                                <button class="btn btn-primary" onclick="generateAdminReport('weekly')" style="flex: 1; min-width: 150px;">📊 Semanal</button>
+                                <button class="btn btn-primary" onclick="generateAdminReport('monthly')" style="flex: 1; min-width: 150px;">📈 Mensual</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <button class="btn btn-success" onclick="exportToExcel()" style="flex: 1;">📥 Exportar Excel</button>
+                                <button class="btn btn-success" onclick="exportToPDF()" style="flex: 1;">📄 Exportar PDF</button>
+                            </div>
+                            <div class="table-container" id="adminReportContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== RECURSOS HUMANOS ===== -->
+                <div id="rhView" class="hidden">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('rh-empleados')">👥 Empleados</button>
+                    </div>
+
+                    <div id="rh-empleados">
+                        <button class="btn btn-success" onclick="openAddEmployeeModal()" style="margin-bottom: 20px;">➕ Agregar Empleado</button>
+                        <div class="table-container" id="rhEmployeeTable"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR EMPLEADO -->
+    <div id="addEmployeeModal" class="modal">
+        <div class="modal-content">
+            <h3>Agregar Nuevo Empleado</h3>
+            <form id="addEmployeeForm" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="newEmpName" required placeholder="Juan García López">
+                </div>
+                <div class="form-group">
+                    <label>Departamento</label>
+                    <input type="text" id="newEmpDept" required placeholder="Operaciones">
+                </div>
+                <div class="form-group">
+                    <label>Puesto</label>
+                    <input type="text" id="newEmpPosition" required placeholder="Supervisor">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-warning" onclick="closeAddEmployeeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTES -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h3>⚙️ Ajustes - Cambiar Credenciales</h3>
+            <form id="settingsForm" style="margin-top: 20px;">
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Supervisor</h4>
+                    <div class="form-group">
+                        <label>Usuario</label>
+                        <input type="text" id="supUsername" placeholder="usuario">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="text" id="supPassword" placeholder="contraseña">
+                    </div>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Administrador</h4>
+                    <div class="form-group">
+                        <label>Usuario</label>
+                        <input type="text" id="adminUsername" placeholder="usuario">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="text" id="adminPassword" placeholder="contraseña">
+                    </div>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Recursos Humanos</h4>
+                    <div class="form-group">
+                        <label>Usuario</label>
+                        <input type="text" id="rhUsername" placeholder="usuario">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="text" id="rhPassword" placeholder="contraseña">
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-warning" onclick="closeSettingsModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL DE FOTOS POR EMPLEADO (SOLO ADMIN) -->
+    <div id="employeePhotosModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h3>📷 Fotos de Checadas — <span id="photosEmpName"></span></h3>
+            <div id="employeePhotosList" style="margin-top: 20px; max-height: 60vh; overflow-y: auto;"></div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-warning" onclick="closeEmployeePhotosModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ZOOM DE FOTO (SOLO ADMIN) -->
+    <div id="photoZoomModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <img id="photoZoomImg" src="" style="max-width: 100%; border-radius: 8px;">
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-warning" onclick="closePhotoZoomModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DATOS INICIALES =====
+        const INITIAL_EMPLOYEES = [
+            { id: '001', nombre: 'Juan García', departamento: 'Administración', puesto: 'Gerente' },
+            { id: '002', nombre: 'María López', departamento: 'Ventas', puesto: 'Ejecutivo' },
+            { id: '003', nombre: 'Carlos Rodríguez', departamento: 'Operaciones', puesto: 'Supervisor' },
+            { id: '004', nombre: 'Ana Martínez', departamento: 'RH', puesto: 'Especialista' },
+            { id: '005', nombre: 'Luis Fernández', departamento: 'IT', puesto: 'Técnico' },
+            { id: '006', nombre: 'Sophie Chen', departamento: 'Marketing', puesto: 'Coordinador' },
+            { id: '007', nombre: 'David Torres', departamento: 'Finanzas', puesto: 'Contador' },
+            { id: '008', nombre: 'Elena Gómez', departamento: 'Calidad', puesto: 'Auditor' },
+            { id: '009', nombre: 'Miguel Sánchez', departamento: 'Operaciones', puesto: 'Operario' },
+            { id: '010', nombre: 'Rosa Díaz', departamento: 'Administración', puesto: 'Secretaria' },
+            { id: '011', nombre: 'Javier Ruiz', departamento: 'Ventas', puesto: 'Ejecutivo' },
+            { id: '012', nombre: 'Patricia Morales', departamento: 'Operaciones', puesto: 'Operario' },
+            { id: '013', nombre: 'Ricardo Flores', departamento: 'IT', puesto: 'Programador' },
+            { id: '014', nombre: 'Catalina Vargas', departamento: 'Diseño', puesto: 'Diseñador' },
+            { id: '015', nombre: 'Fernando Castillo', departamento: 'Logística', puesto: 'Coordinador' },
+            { id: '016', nombre: 'Mariana Reyes', departamento: 'Marketing', puesto: 'Ejecutivo' },
+            { id: '017', nombre: 'Andrés Vega', departamento: 'Operaciones', puesto: 'Operario' },
+            { id: '018', nombre: 'Valentina Silva', departamento: 'Finanzas', puesto: 'Analista' },
+            { id: '019', nombre: 'Raúl Navarro', departamento: 'Administración', puesto: 'Asistente' },
+            { id: '020', nombre: 'Gabriela Medina', departamento: 'RH', puesto: 'Coordinador' }
+        ];
+
+        // Personal de Limpieza — Plantilla Acciona (02 julio 2026).
+        // Se usa con el botón "Alta Personal de Limpieza" del panel de Admin
+        // para dar de alta a este grupo sin borrar los empleados ya existentes.
+        const CLEANING_STAFF_JUL2026 = [
+            { id: '60306302', nombre: 'MENDEZ VAZQUEZ SILVIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306607', nombre: 'REYES MARTINEZ ARACELY', departamento: 'LIMPIEZA', puesto: 'RECOLECTOR' },
+            { id: '60308515', nombre: 'LOPEZ PABLO HELADIO', departamento: 'LIMPIEZA', puesto: 'SUPERVISOR DE RESIDUOS' },
+            { id: '60306284', nombre: 'PONCE ZAFRA MARINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60326213', nombre: 'LLANES GUADARRAMA ISABEL JOAQUINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60312413', nombre: 'CALOCA DELGADILLO GRISELDA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60347411', nombre: 'ROBLERO ESCOBAR ALBERTO MACARI', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60359494', nombre: 'SALVADOR LAURO GABRIELA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306313', nombre: 'RAMOS ESCALANTE MARIA NORMA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306524', nombre: 'MORALES MARTINEZ ROSA ITZEL', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60310572', nombre: 'GOMEZ RAMIREZ CAMERINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306265', nombre: 'GARCIA ATEMPA AURORA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60166017', nombre: 'MEDRANO GOMEZ MARIA GUADALUPE', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306274', nombre: 'ARCE GONZALEZ ERIKA', departamento: 'LIMPIEZA', puesto: 'SUPERVISOR DE LIMPIEZA' },
+            { id: '60306281', nombre: 'PABLO BAUTISTA FRANCISCA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306309', nombre: 'RUIZ VERA SARA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306282', nombre: 'PEREZ GOMEZ MINERVA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306271', nombre: 'NAVA GASPAR JUAN MANUEL', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60305951', nombre: 'DELOYA MONTALVAN LORENA', departamento: 'LIMPIEZA', puesto: 'RECOLECTOR' },
+            { id: '60332732', nombre: 'OCHOA MOLINA MARIA LOURDES', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60305979', nombre: 'VELAZQUEZ CASTRO JENARO', departamento: 'LIMPIEZA', puesto: 'RECOLECTOR' },
+            { id: '60306255', nombre: 'ARCE VILLAVICENCIO ANASTACIO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306258', nombre: 'VITAL GARCIA VERONICA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306264', nombre: 'SOLORIO CASTILLO LEONARDO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306275', nombre: 'MIRANDA TECORRAL YESENIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306277', nombre: 'MARTINEZ SOLIS MIRNA PATRICIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306279', nombre: 'TORRES MARTINEZ FLORENTINO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306290', nombre: 'CAMBRON ESPARZA DANTE', departamento: 'LIMPIEZA', puesto: 'RECOLECTOR' },
+            { id: '60306291', nombre: 'MENDEZ DE LEON DELMA DELIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306293', nombre: 'PEREZ JUAREZ ISABEL', departamento: 'LIMPIEZA', puesto: 'OPERARIO DE MAQUINARIA' },
+            { id: '60364612', nombre: 'RAMOS LOPEZ MARIANA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306299', nombre: 'CARRILLO BURGOIN KARLA ISAURA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306305', nombre: 'GARCIA MUÑOZ MARIA DEL CARMEN', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306317', nombre: 'HERNANDEZ GUTIERREZ CAROLINA', departamento: 'LIMPIEZA', puesto: 'OPERARIO DE MAQUINARIA' },
+            { id: '60309793', nombre: 'RODRIGUEZ GAMBOA ROSA ISELA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60306322', nombre: 'SANTOYO SORIA ARMANDO', departamento: 'LIMPIEZA', puesto: 'OPERARIO DE MAQUINARIA' },
+            { id: '60306336', nombre: 'ACOSTA ZAMANO JESUS OCTAVIANO', departamento: 'LIMPIEZA', puesto: 'RECOLECTOR' },
+            { id: '60311286', nombre: 'CRUZ RUIZ LEONTINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60316712', nombre: 'CRUZ MARTINEZ TECLA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60317676', nombre: 'PEREZ VASQUES MAYRANI CONCEPCION', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60320573', nombre: 'MIRANDA COTA SILVIA GUADALUPE', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60320580', nombre: 'ABAD LEMUS ILIANA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60334220', nombre: 'MONTALVAN ZACAPALA RUBI YOLANDA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60340904', nombre: 'NAVA QUEZADA ALEJANDRO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60345383', nombre: 'LOPEZ GARCIA GUILLERMINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60346428', nombre: 'HERNANDEZ BELLO GALILEA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60349181', nombre: 'JIMENEZ GARCIA PATRICIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60350308', nombre: 'SANTOS MOYRON DAMARIS', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60352847', nombre: 'PEREZ VAZQUEZ KEYLA YAREMI', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60353066', nombre: 'ALBESTRAIN RUIZ MARLON', departamento: 'LIMPIEZA', puesto: 'CHOFER RECOLECTOR' },
+            { id: '60358277', nombre: 'GARCIA LOPEZ MARIA GUADALUPE', departamento: 'LIMPIEZA', puesto: 'SUPERVISOR DE LIMPIEZA' },
+            { id: '60358450', nombre: 'TREJO PINTO GISELA KARINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60359187', nombre: 'RAMIREZ VARGAS ALFREDO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60361343', nombre: 'HURTADO ALVARADO MARIA DEL CARMEN', departamento: 'LIMPIEZA', puesto: 'OPERARIO DE MAQUINARIA' },
+            { id: '60361919', nombre: 'GIL CAMACHO MARIA GUADALUPE', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60363210', nombre: 'RANGEL GARCIA ALONSO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60363211', nombre: 'RAMBALDI PEREZ ALMA LETICIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60363221', nombre: 'CHAVEZ LOPEZ BLANCA IRIS', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60363234', nombre: 'GARCIA SANDOBAL CARLOS', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60363239', nombre: 'CATALAN RIVAS MARIA DEL CARMEN', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60365268', nombre: 'MATUS RODRIGUEZ BLANCA ESTELA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60365488', nombre: 'ARELLANES BERNAL YADIRA OLIVER', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60367062', nombre: 'LEYVA BUELNA JAZMIN', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60368015', nombre: 'GUZMAN GARDUÑO MARIA CARMEN', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60369506', nombre: 'HERNANDEZ ITURRALDE CELSA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60369514', nombre: 'MAURICIO MENDEZ MARIA CLARA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60369521', nombre: 'MORENO FIGUEROA ANA LILIA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60369529', nombre: 'JURADO JURADO RAQUEL', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60370713', nombre: 'LOEZA SANTOS ROSA ISELA', departamento: 'LIMPIEZA', puesto: 'Cleaning Services Operator' },
+            { id: '60370723', nombre: 'TELLEZ RAMIREZ CARLOS ANTONIO', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60370751', nombre: 'RODRIGUEZ CHAVEZ MARIA ISABEL', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60370757', nombre: 'TEPOLE TZOMPAXTLE ADRIANA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60370761', nombre: 'OJEDA HIGUERA MARTHA GUADALUPE', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60370765', nombre: 'GALARZA DIAZ MARIBEL MARGARITA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' },
+            { id: '60370769', nombre: 'REYES VEGA SAIRAM ORALIA', departamento: 'LIMPIEZA', puesto: 'OPERARIO DE MAQUINARIA' },
+            { id: '60371484', nombre: 'ORDOÑEZ ESPINOSA AGRIPINA', departamento: 'LIMPIEZA', puesto: 'TECNICO DE LIMPIEZA' }
+        ];
+
+        const DEFAULT_CREDENTIALS = {
+            supervisor: { username: 'supervisor', password: '1234' },
+            admin: { username: 'admin', password: 'admin123' },
+            rh: { username: 'rh', password: 'rh123' }
+        };
+
+        let CREDENTIALS = JSON.parse(localStorage.getItem('credentials')) || DEFAULT_CREDENTIALS;
+
+        // ===== ESTADO =====
+        let currentRole = null;
+        let selectedEmployee = null;
+        let selectedShift = 'matutino';
+        let selectedType = 'entrada';
+        let signaturePad = null;
+        let employees = JSON.parse(localStorage.getItem('employees')) || INITIAL_EMPLOYEES;
+        let checadas = JSON.parse(localStorage.getItem('checadas')) || [];
+        let observations = JSON.parse(localStorage.getItem('observations')) || {};
+        let dayStatuses = JSON.parse(localStorage.getItem('dayStatuses')) || [];
+        let currentAdminReport = null;
+        let currentAdminStatusReport = null;
+        let selectedSupEmployee = null;
+        let cameraStream = null;
+
+        // Catálogo de estados del día que el Supervisor puede asignar a un
+        // colaborador (descanso, falta, incapacidad, permiso).
+        const STATUS_TYPES = {
+            descanso: { label: 'Descanso', emoji: '🛌' },
+            falta: { label: 'Falta', emoji: '❌' },
+            incapacidad: { label: 'Incapacidad', emoji: '🏥' },
+            permiso: { label: 'Permiso', emoji: '📄' }
+        };
+
+        // ===== INICIALIZACIÓN =====
+        window.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('addEmployeeForm').addEventListener('submit', handleAddEmployee);
+            document.getElementById('employeeSearch').addEventListener('input', filterEmployeeList);
+            document.getElementById('supEmployeeSearch').addEventListener('input', filterSupEmployeeList);
+        });
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-MX');
+            const display = document.getElementById('timeDisplay');
+            if (display) {
+                display.textContent = timeStr;
+            }
+        }
+
+        function updateLoginFields() {
+            const role = document.getElementById('roleSelect').value;
+            const credFields = document.getElementById('credentialsFields');
+            if (role === 'supervisor' || role === 'admin' || role === 'rh') {
+                credFields.classList.remove('hidden');
+            } else {
+                credFields.classList.add('hidden');
+            }
+        }
+
+        // ===== LOGIN =====
+        function handleLogin(e) {
+            e.preventDefault();
+            const role = document.getElementById('roleSelect').value;
+            const errorMsg = document.getElementById('loginError');
+            errorMsg.textContent = '';
+
+            if (!role) {
+                errorMsg.textContent = 'Selecciona un rol';
+                return;
+            }
+
+            if (role === 'empleado') {
+                loginSuccess('empleado');
+            } else {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const cred = CREDENTIALS[role];
+
+                if (username === cred.username && password === cred.password) {
+                    loginSuccess(role);
+                } else {
+                    errorMsg.textContent = 'Usuario o contraseña incorrectos';
+                }
+            }
+        }
+
+        function loginSuccess(role) {
+            currentRole = role;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainArea').classList.remove('hidden');
+
+            const titles = {
+                empleado: '👷 Checador de Asistencia',
+                supervisor: '👁️ Panel de Supervisor',
+                admin: '⚙️ Panel de Administrador',
+                rh: '👥 Gestión de Recursos Humanos'
+            };
+
+            document.getElementById('headerTitle').textContent = titles[role];
+            document.getElementById('userBadge').textContent = role;
+
+            // Mostrar vista correspondiente
+            document.getElementById('empleadoView').classList.add('hidden');
+            document.getElementById('supervisorView').classList.add('hidden');
+            document.getElementById('adminView').classList.add('hidden');
+            document.getElementById('rhView').classList.add('hidden');
+
+            if (role === 'empleado') {
+                document.getElementById('empleadoView').classList.remove('hidden');
+                renderEmployeeList();
+                initSignaturePad();
+                initHiddenCamera();
+            } else if (role === 'supervisor') {
+                document.getElementById('supervisorView').classList.remove('hidden');
+                renderSupEmployeeList();
+                showSupReportToday();
+            } else if (role === 'admin') {
+                document.getElementById('adminView').classList.remove('hidden');
+                renderAdminEmployeeTable();
+            } else if (role === 'rh') {
+                document.getElementById('rhView').classList.remove('hidden');
+                renderRHEmployeeTable();
+            }
+        }
+
+        function logout() {
+            currentRole = null;
+            selectedEmployee = null;
+            selectedSupEmployee = null;
+            stopHiddenCamera();
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('mainArea').classList.add('hidden');
+            document.getElementById('roleSelect').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('credentialsFields').classList.add('hidden');
+            if (signaturePad) signaturePad.clear();
+        }
+
+        // ===== EMPLEADO - CHECADOR =====
+        function initSignaturePad() {
+            const canvas = document.getElementById('signatureCanvas');
+            if (canvas && !signaturePad) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = 300;
+                signaturePad = new SignaturePad(canvas, {
+                    penColor: 'rgb(102, 126, 234)',
+                    backgroundColor: 'white'
+                });
+            }
+        }
+
+        // Activa la cámara en segundo plano (sin mostrar nada en pantalla) para
+        // poder tomar la foto al instante cuando se presione "Registrar Checada",
+        // sin retraso ni indicios visibles para el empleado.
+        // Nota: el navegador SIEMPRE pedirá permiso de cámara la primera vez
+        // (no se puede ni se debe evitar esa solicitud, es una protección del
+        // navegador). Además, por seguridad, esto solo funciona si la página se
+        // abre vía http(s) — no funciona abriendo el archivo .html directo desde disco.
+        function initHiddenCamera() {
+            if (cameraStream) return;
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            }).then(stream => {
+                cameraStream = stream;
+                const video = document.getElementById('hiddenCamera');
+                if (video) video.srcObject = stream;
+            }).catch(err => {
+                // Si el empleado niega el permiso o no hay cámara, la checada
+                // debe poder registrarse igual, simplemente sin foto.
+                console.warn('Cámara no disponible:', err);
+                cameraStream = null;
+            });
+        }
+
+        function stopHiddenCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+        }
+
+        // Captura un frame del video oculto y lo devuelve como JPEG en base64.
+        // Devuelve null si la cámara no está disponible (la checada se registra
+        // igual, sin bloquear ni avisar nada al empleado).
+        function capturePhoto() {
+            const video = document.getElementById('hiddenCamera');
+            if (!cameraStream || !video || !video.videoWidth) return null;
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                autoBrightenCanvas(ctx, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', 0.7);
+            } catch (err) {
+                console.warn('No se pudo capturar la foto:', err);
+                return null;
+            }
+        }
+
+        // Sube el brillo automáticamente si la foto salió oscura (común en cámaras
+        // frontales con poca luz). Mide el brillo promedio real del cuadro y aplica
+        // el multiplicador necesario, con un tope para no "quemar" la imagen.
+        // Esto funciona en todos los navegadores (a diferencia de ctx.filter, que
+        // algunos no soportan bien).
+        function autoBrightenCanvas(ctx, width, height) {
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+
+            let total = 0, samples = 0;
+            for (let i = 0; i < data.length; i += 16 * 4) { // muestreo, no cada pixel
+                total += (data[i] + data[i + 1] + data[i + 2]) / 3;
+                samples++;
+            }
+            const avgBrightness = samples ? total / samples : 128;
+            const target = 150; // brillo objetivo (escala 0-255)
+
+            if (avgBrightness <= 0 || avgBrightness >= target) return;
+
+            const factor = Math.min(target / avgBrightness, 3); // tope para evitar ruido excesivo
+
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.min(255, data[i] * factor);
+                data[i + 1] = Math.min(255, data[i + 1] * factor);
+                data[i + 2] = Math.min(255, data[i + 2] * factor);
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function renderEmployeeList() {
+            const list = document.getElementById('employeeList');
+            list.innerHTML = '';
+            employees.forEach(emp => {
+                const item = document.createElement('div');
+                item.className = 'employee-item' + (selectedEmployee?.id === emp.id ? ' selected' : '');
+                item.innerHTML = `<strong>${emp.nombre}</strong><br><small>${emp.puesto} - ${emp.departamento}</small>`;
+                item.onclick = () => selectEmployee(emp);
+                list.appendChild(item);
+            });
+        }
+
+        function filterEmployeeList() {
+            const search = document.getElementById('employeeSearch').value.toLowerCase();
+            const filtered = employees.filter(e => e.nombre.toLowerCase().includes(search));
+            const list = document.getElementById('employeeList');
+            list.innerHTML = '';
+            filtered.forEach(emp => {
+                const item = document.createElement('div');
+                item.className = 'employee-item' + (selectedEmployee?.id === emp.id ? ' selected' : '');
+                item.innerHTML = `<strong>${emp.nombre}</strong><br><small>${emp.puesto} - ${emp.departamento}</small>`;
+                item.onclick = () => selectEmployee(emp);
+                list.appendChild(item);
+            });
+        }
+
+        function selectEmployee(emp) {
+            selectedEmployee = emp;
+            document.getElementById('selectedEmpInfo').style.display = 'block';
+            document.getElementById('selectedEmpName').textContent = emp.nombre;
+            renderEmployeeList();
+        }
+
+        // Convierte el valor interno del turno a una etiqueta legible.
+        // Si la checada es de antes de este cambio, no tendrá 'shift' guardado.
+        function formatShift(shift) {
+            const labels = {
+                matutino: '🌅 Matutino',
+                vespertino: '🌇 Vespertino',
+                mixto: '🌗 Mixto',
+                nocturno: '🌙 Nocturno'
+            };
+            return labels[shift] || '—';
+        }
+
+        function selectShift(shift) {
+            selectedShift = shift;
+            document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        // Guarda checadas en localStorage. Las fotos pueden llenar el espacio
+        // disponible (5-10MB típico); si eso pasa, avisamos en consola pero
+        // dejamos que quien llama decida reintentar sin foto.
+        function persistChecadas() {
+            try {
+                localStorage.setItem('checadas', JSON.stringify(checadas));
+                return true;
+            } catch (err) {
+                console.error('No se pudo guardar (posible límite de almacenamiento):', err);
+                return false;
+            }
+        }
+
+        function clearSignature() {
+            if (signaturePad) {
+                signaturePad.clear();
+            }
+        }
+
+        function registerChecada() {
+            if (!selectedEmployee) {
+                alert('Selecciona un empleado');
+                return;
+            }
+
+            if (!signaturePad || signaturePad.isEmpty()) {
+                alert('Captura tu firma');
+                return;
+            }
+
+            const now = new Date();
+            const checada = {
+                id: Date.now().toString(),
+                employeeId: selectedEmployee.id,
+                employeeName: selectedEmployee.nombre,
+                shift: selectedShift,
+                type: selectedType,
+                time: now.toISOString(),
+                date: now.toLocaleDateString('es-MX'),
+                signature: signaturePad.toDataURL(),
+                photo: capturePhoto() // null si la cámara no está disponible; no bloquea el registro
+            };
+
+            checadas.push(checada);
+            if (!persistChecadas()) {
+                // El almacenamiento local está lleno: priorizamos no perder la
+                // checada y reintentamos sin la foto (que es lo más pesado).
+                checada.photo = null;
+                persistChecadas();
+            }
+
+            alert('✓ Checada registrada exitosamente');
+            selectedEmployee = null;
+            selectedShift = 'matutino';
+            selectedType = 'entrada';
+            signaturePad.clear();
+            document.getElementById('selectedEmpInfo').style.display = 'none';
+            document.getElementById('employeeSearch').value = '';
+            document.querySelectorAll('.shift-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelector('.shift-btn[data-shift="matutino"]').classList.add('selected');
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelector('.type-btn[data-type="entrada"]').classList.add('selected');
+            renderEmployeeList();
+        }
+
+        // ===== SUPERVISOR =====
+        function renderSupEmployeeList() {
+            const list = document.getElementById('supEmployeeList');
+            list.innerHTML = '';
+            employees.forEach(emp => {
+                const item = document.createElement('div');
+                item.className = 'employee-item' + (selectedSupEmployee?.id === emp.id ? ' selected' : '');
+                item.innerHTML = `<strong>${emp.nombre}</strong><br><small>${emp.puesto}</small>`;
+                item.onclick = () => selectSupEmployee(emp);
+                list.appendChild(item);
+            });
+        }
+
+        function filterSupEmployeeList() {
+            const search = document.getElementById('supEmployeeSearch').value.toLowerCase();
+            const filtered = employees.filter(e => e.nombre.toLowerCase().includes(search));
+            const list = document.getElementById('supEmployeeList');
+            list.innerHTML = '';
+            filtered.forEach(emp => {
+                const item = document.createElement('div');
+                item.className = 'employee-item' + (selectedSupEmployee?.id === emp.id ? ' selected' : '');
+                item.innerHTML = `<strong>${emp.nombre}</strong><br><small>${emp.puesto}</small>`;
+                item.onclick = () => selectSupEmployee(emp);
+                list.appendChild(item);
+            });
+        }
+
+        function selectSupEmployee(emp) {
+            selectedSupEmployee = emp;
+            document.getElementById('supObservationForm').classList.remove('hidden');
+            document.getElementById('supEmpName').textContent = emp.nombre;
+            document.getElementById('supObservation').value = observations[emp.id] || '';
+
+            document.getElementById('supStatusForm').classList.remove('hidden');
+            document.getElementById('supStatusEmpName').textContent = emp.nombre;
+            document.getElementById('supStatusDate').value = todayDateKey();
+            loadDayStatusForm();
+            renderSupStatusHistory();
+
+            renderSupEmployeeList();
+        }
+
+        function saveObservation() {
+            if (!selectedSupEmployee) return;
+            observations[selectedSupEmployee.id] = document.getElementById('supObservation').value;
+            localStorage.setItem('observations', JSON.stringify(observations));
+            alert('Observación guardada');
+        }
+
+        // ===== ESTADO DEL DÍA (Descanso / Falta / Incapacidad / Permiso) =====
+        function todayDateKey() {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // Convierte una fecha en formato de <input type="date"> (YYYY-MM-DD) al
+        // mismo formato usado por las checadas (es-MX), para poder cruzarlos en reportes.
+        function dateKeyToLabel(dateKeyStr) {
+            const [y, m, d] = dateKeyStr.split('-').map(Number);
+            return new Date(y, m - 1, d).toLocaleDateString('es-MX');
+        }
+
+        function loadDayStatusForm() {
+            if (!selectedSupEmployee) return;
+            const dateKey = document.getElementById('supStatusDate').value || todayDateKey();
+            const existing = dayStatuses.find(s => s.employeeId === selectedSupEmployee.id && s.dateKey === dateKey);
+            document.getElementById('supStatusType').value = existing ? existing.status : '';
+            document.getElementById('supStatusNote').value = existing ? (existing.note || '') : '';
+        }
+
+        function saveDayStatus() {
+            if (!selectedSupEmployee) return;
+            const dateKey = document.getElementById('supStatusDate').value || todayDateKey();
+            const status = document.getElementById('supStatusType').value;
+            const note = document.getElementById('supStatusNote').value.trim();
+            const dateLabel = dateKeyToLabel(dateKey);
+
+            // Solo puede existir un estado por empleado y por día.
+            dayStatuses = dayStatuses.filter(s => !(s.employeeId === selectedSupEmployee.id && s.dateKey === dateKey));
+
+            if (status) {
+                dayStatuses.push({
+                    id: Date.now().toString(),
+                    employeeId: selectedSupEmployee.id,
+                    employeeName: selectedSupEmployee.nombre,
+                    dateKey,
+                    dateLabel,
+                    status,
+                    note,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            localStorage.setItem('dayStatuses', JSON.stringify(dayStatuses));
+            alert(status ? '✓ Estado guardado' : 'Estado eliminado (día marcado como normal)');
+            renderSupStatusHistory();
+        }
+
+        function renderSupStatusHistory() {
+            if (!selectedSupEmployee) return;
+            const history = dayStatuses
+                .filter(s => s.employeeId === selectedSupEmployee.id)
+                .sort((a, b) => b.dateKey.localeCompare(a.dateKey))
+                .slice(0, 10);
+
+            const container = document.getElementById('supStatusHistory');
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color:#999; font-size:14px;">Sin registros previos.</p>';
+                return;
+            }
+
+            container.innerHTML = history.map(s => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #e0e0e0;">
+                    <div>
+                        <strong>${STATUS_TYPES[s.status].emoji} ${STATUS_TYPES[s.status].label}</strong> — ${s.dateLabel}
+                        ${s.note ? `<br><small style="color:#666;">${s.note}</small>` : ''}
+                    </div>
+                    <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="deleteDayStatus('${s.id}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteDayStatus(id) {
+            if (!confirm('¿Eliminar este registro de estado?')) return;
+            dayStatuses = dayStatuses.filter(s => s.id !== id);
+            localStorage.setItem('dayStatuses', JSON.stringify(dayStatuses));
+            renderSupStatusHistory();
+            if (selectedSupEmployee && document.getElementById('supStatusDate').value) {
+                loadDayStatusForm();
+            }
+        }
+
+        function showSupReportToday() {
+            const today = new Date().toLocaleDateString('es-MX');
+            const todayChecadas = checadas.filter(c => c.date === today);
+            const todayStatuses = dayStatuses.filter(s => s.dateLabel === today);
+
+            let html = '<table><thead><tr><th>Empleado</th><th>Turno</th><th>Tipo</th><th>Hora</th></tr></thead><tbody>';
+
+            if (todayChecadas.length === 0) {
+                html = '<p style="text-align: center; color: #999;">No hay checadas del día</p>';
+            } else {
+                todayChecadas.forEach(c => {
+                    html += `<tr>
+                        <td>${c.employeeName}</td>
+                        <td>${formatShift(c.shift)}</td>
+                        <td>${c.type === 'entrada' ? '✓ Entrada' : '✗ Salida'}</td>
+                        <td>${new Date(c.time).toLocaleTimeString('es-MX')}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+            }
+
+            html += '<h4 style="margin: 25px 0 10px; color: #333;">📋 Información Adicional del Día (Descansos, Faltas, Incapacidades y Permisos)</h4>';
+            if (todayStatuses.length === 0) {
+                html += '<p style="text-align: center; color: #999;">Sin registros adicionales hoy</p>';
+            } else {
+                html += '<table><thead><tr><th>Empleado</th><th>Estado</th><th>Nota</th></tr></thead><tbody>';
+                todayStatuses.forEach(s => {
+                    html += `<tr>
+                        <td>${s.employeeName}</td>
+                        <td>${STATUS_TYPES[s.status].emoji} ${STATUS_TYPES[s.status].label}</td>
+                        <td>${s.note || '—'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+            }
+
+            document.getElementById('supReportContainer').innerHTML = html;
+        }
+
+        // ===== ADMINISTRADOR =====
+        function renderAdminEmployeeTable() {
+            const tbody = document.createElement('tbody');
+            employees.forEach(emp => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${emp.id}</td>
+                    <td>${emp.nombre}</td>
+                    <td>${emp.departamento}</td>
+                    <td>${emp.puesto}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="viewEmployeePhotos('${emp.id}')">📷 Fotos</button>
+                            <button class="btn btn-danger" onclick="deleteAdminEmployee('${emp.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                `;
+            });
+
+            const table = document.createElement('table');
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            ['ID', 'Nombre', 'Departamento', 'Puesto', 'Acciones'].forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            table.appendChild(tbody);
+
+            document.getElementById('adminEmployeeTable').innerHTML = '';
+            document.getElementById('adminEmployeeTable').appendChild(table);
+        }
+
+        function deleteAdminEmployee(id) {
+            if (confirm('¿Eliminar empleado?')) {
+                employees = employees.filter(e => e.id !== id);
+                localStorage.setItem('employees', JSON.stringify(employees));
+                renderAdminEmployeeTable();
+            }
+        }
+
+        // Alta masiva del personal de limpieza (Plantilla Acciona, 02 julio 2026).
+        // No destructivo: agrega solo a quienes no estén ya registrados por ID
+        // (por número de empleado), sin borrar ni afectar empleados existentes.
+        function importCleaningStaffBatch() {
+            const existingIds = new Set(employees.map(e => e.id));
+            const nuevos = CLEANING_STAFF_JUL2026.filter(e => !existingIds.has(e.id));
+            const yaExistian = CLEANING_STAFF_JUL2026.length - nuevos.length;
+
+            if (nuevos.length === 0) {
+                alert('Los 76 colaboradores de limpieza ya estaban dados de alta. No se agregó nada nuevo.');
+                return;
+            }
+
+            if (!confirm(`Se darán de alta ${nuevos.length} colaboradores de limpieza nuevos` +
+                (yaExistian > 0 ? ` (${yaExistian} ya estaban registrados y se omitirán).` : '.') +
+                '\n¿Continuar?')) {
+                return;
+            }
+
+            employees = employees.concat(nuevos);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            renderAdminEmployeeTable();
+            alert(`✓ ${nuevos.length} colaboradores de limpieza dados de alta correctamente.`);
+        }
+
+        // ===== RESPALDO / SINCRONIZACIÓN ENTRE DISPOSITIVOS =====
+        // Como los datos viven en localStorage (propio de cada dispositivo/navegador),
+        // compartir el mismo .html no transfiere los datos. Este respaldo .json sí lo hace.
+        function exportBackup() {
+            const backup = {
+                tipo: 'respaldo-checador-digital',
+                exportedAt: new Date().toISOString(),
+                employees: employees,
+                checadas: checadas,
+                observations: observations,
+                dayStatuses: dayStatuses,
+                credentials: CREDENTIALS
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Respaldo_ChecadorDigital_' + Date.now() + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    if (!backup || !Array.isArray(backup.employees)) {
+                        throw new Error('Formato de respaldo inválido');
+                    }
+
+                    // Archivo de "alta de empleados" (ej. generado para dar de alta un
+                    // grupo específico): solo agrega empleados nuevos por ID, sin tocar
+                    // checadas, observaciones, estados ni credenciales ya existentes.
+                    if (backup.tipo === 'alta-empleados') {
+                        const existingIds = new Set(employees.map(e => e.id));
+                        const nuevos = backup.employees.filter(e => !existingIds.has(e.id));
+                        const yaExistian = backup.employees.length - nuevos.length;
+
+                        if (nuevos.length === 0) {
+                            alert('Todos los empleados de este archivo ya estaban dados de alta. No se agregó nada nuevo.');
+                            event.target.value = '';
+                            return;
+                        }
+
+                        const msg = 'Se darán de alta ' + nuevos.length + ' empleado(s) nuevo(s)' +
+                            (yaExistian > 0 ? ' (' + yaExistian + ' ya estaban registrados y se omitirán).' : '.') +
+                            '\nEsto NO afecta checadas, observaciones ni credenciales existentes.\n¿Continuar?';
+                        if (!confirm(msg)) {
+                            event.target.value = '';
+                            return;
+                        }
+
+                        employees = employees.concat(nuevos);
+                        localStorage.setItem('employees', JSON.stringify(employees));
+                        alert('✓ ' + nuevos.length + ' empleado(s) dado(s) de alta correctamente. La página se recargará.');
+                        location.reload();
+                        return;
+                    }
+
+                    if (!confirm('Esto reemplazará TODOS los datos de este dispositivo (empleados, checadas, observaciones, estados y credenciales) con los del respaldo. ¿Continuar?')) {
+                        event.target.value = '';
+                        return;
+                    }
+
+                    employees = backup.employees || [];
+                    checadas = backup.checadas || [];
+                    observations = backup.observations || {};
+                    dayStatuses = backup.dayStatuses || [];
+                    CREDENTIALS = backup.credentials || DEFAULT_CREDENTIALS;
+
+                    localStorage.setItem('employees', JSON.stringify(employees));
+                    localStorage.setItem('checadas', JSON.stringify(checadas));
+                    localStorage.setItem('observations', JSON.stringify(observations));
+                    localStorage.setItem('dayStatuses', JSON.stringify(dayStatuses));
+                    localStorage.setItem('credentials', JSON.stringify(CREDENTIALS));
+
+                    alert('✓ Respaldo importado correctamente. La página se recargará.');
+                    location.reload();
+                } catch (err) {
+                    console.error('Error al importar respaldo:', err);
+                    alert('No se pudo leer el archivo. Verifica que sea un respaldo válido generado por este sistema (botón "Exportar Respaldo").');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function generateAdminReport(type) {
+            let data = [];
+            let statusData = [];
+
+            if (type === 'daily') {
+                const today = new Date().toLocaleDateString('es-MX');
+                data = checadas.filter(c => c.date === today).map(c => ({
+                    'Empleado': c.employeeName,
+                    'ID': c.employeeId,
+                    'Turno': formatShift(c.shift),
+                    'Tipo': c.type,
+                    'Hora': new Date(c.time).toLocaleTimeString('es-MX'),
+                    'Foto': c.photo || null
+                }));
+                statusData = dayStatuses.filter(s => s.dateLabel === today).map(s => ({
+                    'Empleado': s.employeeName,
+                    'Estado': STATUS_TYPES[s.status].emoji + ' ' + STATUS_TYPES[s.status].label,
+                    'Fecha': s.dateLabel,
+                    'Nota': s.note || '—'
+                }));
+            } else if (type === 'weekly') {
+                const week = new Date();
+                week.setDate(week.getDate() - 7);
+                const weekChecadas = checadas.filter(c => new Date(c.time) >= week);
+                const empMap = {};
+                employees.forEach(e => {
+                    const ec = weekChecadas.filter(c => c.employeeId === e.id);
+                    const turnos = [...new Set(ec.map(c => formatShift(c.shift)))];
+                    empMap[e.id] = {
+                        'Empleado': e.nombre,
+                        'Checadas': ec.length,
+                        'Entradas': ec.filter(c => c.type === 'entrada').length,
+                        'Salidas': ec.filter(c => c.type === 'salida').length,
+                        'Turno(s)': turnos.length ? turnos.join(', ') : '—'
+                    };
+                });
+                data = Object.values(empMap);
+                statusData = dayStatuses.filter(s => new Date(s.dateKey + 'T00:00:00') >= week)
+                    .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+                    .map(s => ({
+                        'Empleado': s.employeeName,
+                        'Estado': STATUS_TYPES[s.status].emoji + ' ' + STATUS_TYPES[s.status].label,
+                        'Fecha': s.dateLabel,
+                        'Nota': s.note || '—'
+                    }));
+            } else {
+                const month = new Date();
+                month.setDate(month.getDate() - 30);
+                const monthChecadas = checadas.filter(c => new Date(c.time) >= month);
+                const empMap = {};
+                employees.forEach(e => {
+                    const ec = monthChecadas.filter(c => c.employeeId === e.id);
+                    const dias = new Set(ec.map(c => c.date)).size;
+                    const turnos = [...new Set(ec.map(c => formatShift(c.shift)))];
+                    empMap[e.id] = {
+                        'Empleado': e.nombre,
+                        'Días': dias,
+                        'Total Checadas': ec.length,
+                        'Turno(s)': turnos.length ? turnos.join(', ') : '—'
+                    };
+                });
+                data = Object.values(empMap);
+                statusData = dayStatuses.filter(s => new Date(s.dateKey + 'T00:00:00') >= month)
+                    .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+                    .map(s => ({
+                        'Empleado': s.employeeName,
+                        'Estado': STATUS_TYPES[s.status].emoji + ' ' + STATUS_TYPES[s.status].label,
+                        'Fecha': s.dateLabel,
+                        'Nota': s.note || '—'
+                    }));
+            }
+
+            currentAdminReport = data;
+            currentAdminStatusReport = statusData;
+            displayAdminReport(data, statusData);
+        }
+
+        function displayAdminReport(data, statusData) {
+            let html = '';
+
+            if (!data || data.length === 0) {
+                html += '<p style="text-align: center; color: #999;">No hay datos de checadas en este periodo</p>';
+            } else {
+                html += '<table><thead><tr>';
+                Object.keys(data[0]).forEach(key => {
+                    html += `<th>${key}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                data.forEach(row => {
+                    html += '<tr>';
+                    Object.entries(row).forEach(([key, val]) => {
+                        if (key === 'Foto') {
+                            html += val
+                                ? `<td><img src="${val}" style="width:45px;height:45px;border-radius:6px;object-fit:cover;cursor:pointer;" onclick="showPhotoZoom('${val}')"></td>`
+                                : `<td style="color:#999;">—</td>`;
+                        } else {
+                            html += `<td>${val}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+            }
+
+            html += '<h4 style="margin: 25px 0 10px; color: #333;">📋 Información Adicional (Descansos, Faltas, Incapacidades y Permisos)</h4>';
+            if (!statusData || statusData.length === 0) {
+                html += '<p style="text-align: center; color: #999;">Sin registros en este periodo</p>';
+            } else {
+                html += '<table><thead><tr>';
+                Object.keys(statusData[0]).forEach(key => {
+                    html += `<th>${key}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                statusData.forEach(row => {
+                    html += '<tr>';
+                    Object.values(row).forEach(val => {
+                        html += `<td>${val}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+            }
+
+            document.getElementById('adminReportContainer').innerHTML = html;
+        }
+
+        function showPhotoZoom(dataUrl) {
+            document.getElementById('photoZoomImg').src = dataUrl;
+            document.getElementById('photoZoomModal').classList.add('show');
+        }
+
+        function closePhotoZoomModal() {
+            document.getElementById('photoZoomModal').classList.remove('show');
+        }
+
+        // Historial completo de fotos de un empleado (todas las checadas con foto,
+        // sin importar el periodo del reporte). Solo accesible desde el rol Admin.
+        function viewEmployeePhotos(empId) {
+            const emp = employees.find(e => e.id === empId);
+            if (!emp) return;
+
+            const empChecadas = checadas
+                .filter(c => c.employeeId === empId && c.photo)
+                .sort((a, b) => new Date(b.time) - new Date(a.time));
+
+            document.getElementById('photosEmpName').textContent = emp.nombre;
+            const list = document.getElementById('employeePhotosList');
+
+            if (empChecadas.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999;">Este empleado no tiene fotos registradas.</p>';
+            } else {
+                list.innerHTML = empChecadas.map(c => `
+                    <div style="display:flex; align-items:center; gap:15px; padding:12px; border-bottom:1px solid #e0e0e0;">
+                        <img src="${c.photo}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;cursor:pointer;" onclick="showPhotoZoom('${c.photo}')">
+                        <div>
+                            <strong>${c.date}</strong> — ${new Date(c.time).toLocaleTimeString('es-MX')}<br>
+                            <small>${c.type === 'entrada' ? '✓ Entrada' : '✗ Salida'} · ${formatShift(c.shift)}</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('employeePhotosModal').classList.add('show');
+        }
+
+        function closeEmployeePhotosModal() {
+            document.getElementById('employeePhotosModal').classList.remove('show');
+        }
+
+        document.getElementById('employeePhotosModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeEmployeePhotosModal();
+        });
+
+        document.getElementById('photoZoomModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closePhotoZoomModal();
+        });
+
+        function exportToExcel() {
+            if (currentAdminReport === null) {
+                alert('Genera un reporte primero');
+                return;
+            }
+
+            // Verificación de seguridad: si la librería no cargó (ej. sin internet
+            // o bloqueada), avisamos claramente en vez de dejar que truene sin explicación.
+            if (typeof XLSX === 'undefined') {
+                alert('No se pudo cargar la librería de Excel. Revisa tu conexión a internet e intenta de nuevo.');
+                return;
+            }
+
+            const hasChecadas = currentAdminReport.length > 0;
+            const hasStatus = currentAdminStatusReport && currentAdminStatusReport.length > 0;
+            if (!hasChecadas && !hasStatus) {
+                alert('No hay datos para exportar en este periodo');
+                return;
+            }
+
+            try {
+                // La foto (si existe) no se exporta como imagen gigante de texto;
+                // se reemplaza por un indicador simple.
+                const exportData = hasChecadas
+                    ? currentAdminReport.map(row => {
+                        const clean = { ...row };
+                        if ('Foto' in clean) {
+                            clean['Foto'] = clean['Foto'] ? 'Sí' : 'No';
+                        }
+                        return clean;
+                    })
+                    : [{ 'Info': 'Sin checadas en este periodo' }];
+
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+
+                if (hasStatus) {
+                    const wsStatus = XLSX.utils.json_to_sheet(currentAdminStatusReport);
+                    XLSX.utils.book_append_sheet(wb, wsStatus, 'Estados');
+                }
+
+                XLSX.writeFile(wb, 'Reporte_' + Date.now() + '.xlsx');
+            } catch (err) {
+                console.error('Error al generar Excel:', err);
+                alert('Ocurrió un error al generar el Excel. Intenta de nuevo o usa la exportación a PDF.');
+            }
+        }
+
+        function exportToPDF() {
+            if (currentAdminReport === null) {
+                alert('Genera un reporte primero');
+                return;
+            }
+
+            // Verificación de seguridad: si el plugin no cargó (ej. sin internet),
+            // avisamos claramente en vez de dejar que truene sin explicación.
+            if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') {
+                alert('No se pudo cargar la librería de PDF. Revisa tu conexión a internet e intenta de nuevo.');
+                return;
+            }
+
+            const hasChecadas = currentAdminReport.length > 0;
+            const hasStatus = currentAdminStatusReport && currentAdminStatusReport.length > 0;
+            if (!hasChecadas && !hasStatus) {
+                alert('No hay datos para exportar en este periodo');
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                if (typeof doc.autoTable !== 'function') {
+                    alert('No se pudo cargar el módulo de tablas para PDF. Revisa tu conexión a internet e intenta de nuevo.');
+                    return;
+                }
+
+                // Encabezado del reporte
+                doc.setFontSize(16);
+                doc.text('Reporte de Asistencia', 15, 15);
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('Generado: ' + new Date().toLocaleString('es-MX'), 15, 21);
+
+                let nextY = 27;
+
+                if (hasChecadas) {
+                    const columns = Object.keys(currentAdminReport[0]);
+                    const data = currentAdminReport.map(row =>
+                        columns.map(col => col === 'Foto' ? (row[col] ? 'Sí' : 'No') : row[col])
+                    );
+
+                    doc.autoTable({
+                        head: [columns],
+                        body: data,
+                        startY: nextY,
+                        headStyles: { fillColor: [102, 126, 234] },
+                        styles: { fontSize: 9 }
+                    });
+                    nextY = doc.lastAutoTable.finalY + 12;
+                } else {
+                    doc.setFontSize(11);
+                    doc.setTextColor(150);
+                    doc.text('Sin checadas en este periodo', 15, nextY);
+                    nextY += 12;
+                }
+
+                if (hasStatus) {
+                    doc.setFontSize(12);
+                    doc.setTextColor(0);
+                    doc.text('Información Adicional (Descansos, Faltas, Incapacidades y Permisos)', 15, nextY);
+
+                    const statusColumns = Object.keys(currentAdminStatusReport[0]);
+                    const statusRows = currentAdminStatusReport.map(row => statusColumns.map(col => row[col]));
+
+                    doc.autoTable({
+                        head: [statusColumns],
+                        body: statusRows,
+                        startY: nextY + 4,
+                        headStyles: { fillColor: [237, 137, 54] },
+                        styles: { fontSize: 9 }
+                    });
+                }
+
+                doc.save('Reporte_' + Date.now() + '.pdf');
+            } catch (err) {
+                console.error('Error al generar PDF:', err);
+                alert('Ocurrió un error al generar el PDF. Intenta de nuevo o usa la exportación a Excel.');
+            }
+        }
+
+
+        // ===== RECURSOS HUMANOS =====
+        function renderRHEmployeeTable() {
+            const tbody = document.createElement('tbody');
+            employees.forEach(emp => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${emp.id}</td>
+                    <td>${emp.nombre}</td>
+                    <td>${emp.departamento}</td>
+                    <td>${emp.puesto}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-danger" onclick="deleteRHEmployee('${emp.id}')">Eliminar</button>
+                        </div>
+                    </td>
+                `;
+            });
+
+            const table = document.createElement('table');
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            ['ID', 'Nombre', 'Departamento', 'Puesto', 'Acciones'].forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            table.appendChild(tbody);
+
+            document.getElementById('rhEmployeeTable').innerHTML = '';
+            document.getElementById('rhEmployeeTable').appendChild(table);
+        }
+
+        function deleteRHEmployee(id) {
+            if (confirm('¿Eliminar empleado?')) {
+                employees = employees.filter(e => e.id !== id);
+                localStorage.setItem('employees', JSON.stringify(employees));
+                renderRHEmployeeTable();
+            }
+        }
+
+        // ===== MODALES =====
+        function openAddEmployeeModal() {
+            document.getElementById('addEmployeeModal').classList.add('show');
+        }
+
+        function closeAddEmployeeModal() {
+            document.getElementById('addEmployeeModal').classList.remove('show');
+            document.getElementById('addEmployeeForm').reset();
+        }
+
+        function handleAddEmployee(e) {
+            e.preventDefault();
+            const emp = {
+                id: (employees.length + 1).toString().padStart(3, '0'),
+                nombre: document.getElementById('newEmpName').value,
+                departamento: document.getElementById('newEmpDept').value,
+                puesto: document.getElementById('newEmpPosition').value
+            };
+            employees.push(emp);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            closeAddEmployeeModal();
+            
+            if (currentRole === 'admin') {
+                renderAdminEmployeeTable();
+            } else if (currentRole === 'rh') {
+                renderRHEmployeeTable();
+            }
+            alert('Empleado agregado');
+        }
+
+        document.getElementById('addEmployeeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddEmployeeModal();
+        });
+
+        // ===== AJUSTES (ADMIN) =====
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.add('show');
+            // Cargar valores actuales
+            document.getElementById('supUsername').value = CREDENTIALS.supervisor.username;
+            document.getElementById('supPassword').value = CREDENTIALS.supervisor.password;
+            document.getElementById('adminUsername').value = CREDENTIALS.admin.username;
+            document.getElementById('adminPassword').value = CREDENTIALS.admin.password;
+            document.getElementById('rhUsername').value = CREDENTIALS.rh.username;
+            document.getElementById('rhPassword').value = CREDENTIALS.rh.password;
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        document.getElementById('settingsForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            CREDENTIALS.supervisor.username = document.getElementById('supUsername').value;
+            CREDENTIALS.supervisor.password = document.getElementById('supPassword').value;
+            CREDENTIALS.admin.username = document.getElementById('adminUsername').value;
+            CREDENTIALS.admin.password = document.getElementById('adminPassword').value;
+            CREDENTIALS.rh.username = document.getElementById('rhUsername').value;
+            CREDENTIALS.rh.password = document.getElementById('rhPassword').value;
+
+            localStorage.setItem('credentials', JSON.stringify(CREDENTIALS));
+            alert('✓ Credenciales actualizadas exitosamente');
+            closeSettingsModal();
+        });
+
+        document.getElementById('settingsModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeSettingsModal();
+        });
+
+        // ===== NAVEGACIÓN TABS =====
+        function switchTab(tabName) {
+            document.querySelectorAll('[id^="' + tabName.split('-')[0] + '-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tabName === 'sup-reportes') {
+                showSupReportToday();
+            }
+        }
+    </script>
+    <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5RJDJjrI7yDDuChZ1X6ZVqPemJz1EG3s",
+  authDomain: "checador-acciona-sjd.firebaseapp.com",
+  projectId: "checador-acciona-sjd",
+  storageBucket: "checador-acciona-sjd.firebasestorage.app",
+  messagingSenderId: "24024747545",
+  appId: "1:24024747545:web:6756d6c57ce7caab74a488",
+  measurementId: "G-SX9DTZP9QD"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+console.log("🔥 Firebase conectado");
+
+window.db = db;
+
+</script>
+</body>
+</html>

@@ -2032,8 +2032,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import {
   getFirestore,
   collection,
-  addDoc,
-  getDocs
+  getDocs,
+  doc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2075,6 +2076,22 @@ async function cargarEmpleadosFirestore() {
 }
 
 cargarEmpleadosFirestore();
+async function subirEmpleadosLimpieza() {
+
+    for (const emp of CLEANING_STAFF_JUL2026) {
+
+        await setDoc(
+            doc(db, "employees", emp.id),
+            emp
+        );
+
+        console.log("Subido:", emp.nombre);
+    }
+
+    console.log("✅ Todos los empleados cargados");
+}
+
+subirEmpleadosLimpieza();
         
 </script>
 

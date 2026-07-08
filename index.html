@@ -2057,25 +2057,7 @@ window.firebaseReady = true;
 
 console.log("Firestore listo");
 
-async function cargarEmpleadosFirestore() {
 
-    const snapshot = await getDocs(
-        collection(db, "employees")
-    );
-
-    let empleadosCloud = [];
-
-    snapshot.forEach(docu => {
-        empleadosCloud.push(docu.data());
-    });
-
-    console.log(
-        "Empleados Firestore:",
-        empleadosCloud.length
-    );
-}
-
-cargarEmpleadosFirestore();
 async function cargarEmpleadosFirestore() {
 
     const snapshot = await getDocs(

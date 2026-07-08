@@ -909,7 +909,7 @@
         let selectedShift = 'matutino';
         let selectedType = 'entrada';
         let signaturePad = null;
-        let employees = JSON.parse(localStorage.getItem('employees')) || INITIAL_EMPLOYEES;
+        let employees = [];
         let checadas = JSON.parse(localStorage.getItem('checadas')) || [];
         let observations = JSON.parse(localStorage.getItem('observations')) || {};
         let dayStatuses = JSON.parse(localStorage.getItem('dayStatuses')) || [];
@@ -2076,8 +2076,39 @@ async function cargarEmpleadosFirestore() {
 }
 
 cargarEmpleadosFirestore();
-async function subirEmpleadosLimpieza() {
+async function cargarEmpleadosFirestore() {
 
+    const snapshot = await getDocs(
+        collection(db, "employees")
+    );
+
+    employees = [];
+
+    snapshot.forEach(docu => {
+        employees.push(docu.data());
+    });
+
+    console.log(
+        "Empleados Firestore:",
+        employees.length
+    );
+
+    // Actualizar listas visuales
+    renderEmployeeList();
+
+    if (typeof renderSupEmployeeList === 'function') {
+        renderSupEmployeeList();
+    }
+
+    if (typeof renderAdminEmployeeTable === 'function') {
+        renderAdminEmployeeTable();
+    }
+
+    if (typeof renderRHEmployeeTable === 'function') {
+        renderRHEmployeeTable();
+    }
+}
+``
     for (const emp of CLEANING_STAFF_JUL2026) {
 
         await setDoc(
@@ -2090,8 +2121,6 @@ async function subirEmpleadosLimpieza() {
 
     console.log("✅ Todos los empleados cargados");
 }
-
-subirEmpleadosLimpieza();
         
 </script>
 
